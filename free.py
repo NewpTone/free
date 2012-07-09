@@ -11,7 +11,7 @@ import subprocess
 import re
 import sys
 
-def free(opt):
+def free(opt,args):
     # Get process info
     ps = subprocess.Popen(['ps', '-caxm', '-orss,comm'], stdout=subprocess.PIPE).communicate()[0]
     vm = subprocess.Popen(['vm_stat'], stdout=subprocess.PIPE).communicate()[0]
@@ -37,19 +37,28 @@ def free(opt):
         rowText = vmLines[row].strip()
         rowElements = sep.split(rowText)
         vmStats[(rowElements[0])] = int(rowElements[1].strip('\.')) * 4096
-
-    print 'Wired Memory:\t\t%d MB' % ( vmStats["Pages wired down"]/1024/1024 )
-    print 'Active Memory:\t\t%d MB' % ( vmStats["Pages active"]/1024/1024 )
-    print 'Inactive Memory:\t%d MB' % ( vmStats["Pages inactive"]/1024/1024 )
-    print 'Free Memory:\t\t%d MB' % ( vmStats["Pages free"]/1024/1024 )
-    print 'Real Mem Total (ps):\t%.3f MB' % ( rssTotal/1024/1024 )
-
+    if opt.vm_stat:
+        print 'Wired Memory:\t\t%d MB' % ( vmStats["Pages wired down"]/1024/1024 )
+        print 'Active Memory:\t\t%d MB' % ( vmStats["Pages active"]/1024/1024 )
+        print 'Inactive Memory:\t\t%d MB' % ( vmStats["Pages inactive"]/1024/1024 )
+        print 'Free Memory:\t\t%d MB' % ( vmStats["Pages free"]/1024/1024 )
+        print 'Real Mem Total (ps):\t%.3f MB' % ( rssTotal/1024/1024 )
+    else:
+        total=(vmStats["Pages wired down"]+vmStats["Pages active"]+ \
+              vmStats["Pages inactive"]+vmStats["Pages free"])/1024
+        free=(vmStats["Pages inactive"]+vmStats["Pages free"])/1024
+        used=total-free
+        shared=0
+        print    '\t\t total  \t used  \t free  \t shared  \t buffers \t cached'
+        print 'Mem: \t\t%d  \t %d \t%d \t %d '%(total,used,free,shared)
+        print "-/+ buffers/cache:"
+        print "Swap:"
 
 
 
 if __name__ =="__main__":
 
-    parser = OptionParser(usage="usage: %prog [-b|-k|-m|-g] [-l] [-o] [-t] [-s delay] [-c count] [-V]",
+    parser = OptionParser(usage="usage: free [-b|-k|-m|-g] [-l] [-o] [-t] [-s delay] [-c count] [-V]",
                           epilog="free tool on Mac OS"
                          )
 
@@ -65,6 +74,7 @@ if __name__ =="__main__":
 
     parser.add_option("-l",action="store_true",help= "show detailed low and high memory statistics")
     parser.add_option("-o",
+
                       action="store_true",
                       help="use old format (no -/+buffers/cache line)")
     parser.add_option("-t",action="store_true",help= "display total for RAM + swap")
@@ -75,9 +85,10 @@ if __name__ =="__main__":
     parser.add_option("-V",action="store_true",default="Version 1.0",
                       help= "display version information and exit",
                       )
-
+    parser.add_option("-v","--vm_stat",action="store_true",dest="vm_stat",
+                      help= "display format like vm_stat",
+                      )
 
     (options, args) = parser.parse_args()
-    print options,args
-    free(args)
+    free(options,args)
 
