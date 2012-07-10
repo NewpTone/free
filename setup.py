@@ -1,5 +1,6 @@
 
-fromm setuptools import setup, find_packages
+#usr/bin/python
+from setuptools import setup, find_packages
 setup(
 name="free memory command tool",
 version="0.10",
@@ -8,5 +9,5 @@ author="Newptone",
 url="http://www.cnblogs.com/yuxc",
 license="LGPL",
 packages= find_packages(),
-scripts=["free.py"],
+scripts=["free"],
 )
